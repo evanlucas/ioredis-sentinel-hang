@@ -1,0 +1,76 @@
+version: '2.4'
+
+services:
+  persistent-redis-0:
+    image: redis:6
+    environment:
+      DISK_DIR: /data
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - -p
+        - "6371"
+        - ping
+    command:
+      - redis-server
+      - --port
+      - "6371"
+
+  persistent-redis-1:
+    image: redis:6
+    environment:
+      DISK_DIR: /data
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - -p
+        - "6371"
+        - ping
+    command:
+      - redis-server
+      - --port
+      - "6371"
+      - --replicaof
+      - persistent-redis-0
+      - "6371"
+    depends_on:
+      persistent-redis-0:
+        condition: service_started
+
+  persistent-redis-sentinel:
+    build:
+      context: ./sentinel
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - -p
+        - "26371"
+        - info
+        - server
+    command:
+      - redis-server
+      - /etc/redis/sentinel/sentinel.conf
+      - --sentinel
+    depends_on:
+      persistent-redis-0:
+        condition: service_healthy
+      persistent-redis-1:
+        condition: service_healthy
+
+  package:
+    build:
+      context: ./
+      target: test
+    environment:
+      REDIS_HOST: "persistent-redis-sentinel:26371"
+      REDIS_PORT: 26371
+      TEST_SUITE: "1"
+    depends_on:
+      persistent-redis-sentinel:
+        condition: service_healthy
+    volumes:
+      - $PWD:/opt/app/
+    tty: true

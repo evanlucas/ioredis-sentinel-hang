@@ -1,0 +1,23 @@
+{
+  "name": "ioredis-sentinel-hang",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test.js",
+  "scripts": {
+    "start": "docker-compose up --build -d --scale persistent-redis-sentinel=3",
+    "#pretest": "docker-compose up --build -d --scale persistent-redis-sentinel=3 persistent-redis-0 persistent-redis-1 persistent-redis-sentinel",
+    "#test": "docker-compose build package && docker-compose run -e DEBUG='*' --name test --rm package",
+    "test": "docker-compose exec -e DEBUG='*' -w /opt/app package node test.js",
+    "stop": "docker-compose down -v --remove-orphans --rmi local"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tap": "^15.0.9"
+  },
+  "dependencies": {
+    "ioredis-4.26.0": "npm:ioredis@4.26.0",
+    "ioredis-4.27.0": "npm:ioredis@4.27.0"
+  }
+}
